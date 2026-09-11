@@ -49,6 +49,66 @@ Step-by-step tutorials cover tilt-series and movie conversion:
 | Warp | [Warp → CETS](docs/tutorials/warp-to-cets.md) | [CETS → Warp](docs/tutorials/cets-to-warp.md) |
 | RELION 5 | [RELION → CETS](docs/tutorials/relion-to-cets.md) | [CETS → RELION](docs/tutorials/cets-to-relion.md) |
 
+## Zarr payload structure
+
+A bundle pairs `experiment.cets.json` with a local Zarr v3 directory,
+`experiment.nonrigid.zarr`. One store serves the document, with a separate group
+for each alignment that has sampled deformation. The alignment's
+`non_rigid_alignment.payload_uri` and `payload_group` locate its data; group IDs
+are generated identifiers, not alignment names. Relative payload paths resolve
+from the JSON's directory.
+
+The logical layout for a tilt-series alignment is:
+
+```text
+experiment.cets.json
+experiment.nonrigid.zarr/
+  zarr.json                         root metadata: profile_version, complete
+  alignments/<group-id>/
+    zarr.json                       alignment identity, context_digest, units
+    points                          (N, 3)    float64
+    projected_residual              (T, N, 2) float32
+    sample_valid                    (N,)      bool
+    observation_valid               (T, N)    bool
+    projection_valid                (T, N)    bool
+    weights                         (T, N)    float32
+    displacement_3d                 (T, N, 3) float32, optional
+    displacement_valid              (T, N)    bool, optional
+    ctf_depth                       (T, N)    float32, optional
+    ctf_depth_valid                 (T, N)    bool, optional
+    point_ids                       (N,)      UTF-8, particle sampling only
+    heldout/                        same array layout, with H held-out samples
+    reports/                        optional diagnostics in group attributes
+    snapshots/<artifact-id>         optional uint8 native-file arrays
+  movies/<group-id>/                 movie alignment data, when present
+```
+
+`N` is the training sample count, `H` the held-out count and `T` the number of tilt
+images, including excluded rows. Training arrays live directly in the alignment
+group. Each array is stored as Zarr metadata and chunk data; row-dependent arrays
+are chunked one tilt/frame at a time, with up to 4096 samples per chunk.
+
+Points are in the reference volume's physical frame; residuals are in each tilt
+image's physical frame. Coordinates, displacements and signed CTF depth use Å.
+`tilt_image_ids[t]` in the descriptor identifies array row `t`. Particle
+`point_ids` bind each block's samples to the CETS point annotation. Movie groups
+use 2D points `(N, 2)` and residuals `(F, N, 2)`, with rows identified by the parent
+MovieAlignment's `frame_ids`; they have no 3D-displacement or CTF-depth channels.
+
+`observation_valid` records available observations; `projection_valid` marks those
+usable for fitting. A finite observation outside the image may remain available
+while excluded from fitting. `sample_valid` applies to the sample itself, and
+`weights` are nonnegative fit weights, not validity flags. Unavailable residuals
+are zero-filled. Optional channels have independent masks; a displacement state
+of `zero_at_samples` retains its mask while omitting the displacement array.
+
+The `heldout` group exists even when empty; missing evaluation produces
+`not_evaluated` and null metrics. Snapshot arrays carry their native role and
+SHA-256 in attributes and serve as provenance. Fitting uses the sampled data.
+Global operators, image/reference dimensions and spacing, acquisition metadata
+and optics remain authoritative in CETS JSON. The context digest binds the payload
+to that geometry. Keep the JSON and Zarr directory together when relocating them.
+
 ## Development installation
 
 Python ≥3.11 is declared; the validated environment is Linux x86_64 / Python 3.13,
@@ -131,9 +191,6 @@ python -m mypy
 
 The port excludes anisotropic pixels, non-unit Warp SizeRoundingFactors,
 GridAngle*, magnification correction, AreTomo2 and legacy arewarpion stores.
-GPL-derived validation tooling builds from external sources in scratch space and
-is excluded from wheel/sdist. Transferred MIT code retains attribution; newly
-written integration code is MPL-2.0. See [source notices](THIRD_PARTY_NOTICES.md).
 
 [Core additions](docs/cets-additions.md) track the local schema and future upstream
 reconciliation. Merging the schema into main and changing downstream converters are later steps.
