@@ -1,0 +1,17 @@
+.venv/
+.scratch/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Local planning and port-validation records
+/docs/baseline/
+/docs/porting-and-validation.md
+/docs/test-migration.md
+/docs/implementation-plan.md
+/docs/validation-results.json

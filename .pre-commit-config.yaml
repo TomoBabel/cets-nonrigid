@@ -1,0 +1,13 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.12
+    hooks:
+      - id: ruff
+  - repo: local
+    hooks:
+      - id: mypy-public-api
+        name: Type-check the public CETS boundary
+        entry: python -m mypy
+        language: system
+        pass_filenames: false
+        files: ^src/cets_nonrigid/

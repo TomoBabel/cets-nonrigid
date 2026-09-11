@@ -1,0 +1,13 @@
+include LICENSE LICENSE-MIT THIRD_PARTY_NOTICES.md README.md environment-lock.json constraints-linux-cu129.txt
+recursive-include docs *.md *.json
+prune tests
+prune tools
+prune validation
+prune .scratch
+prune .venv
+
+prune docs/baseline
+exclude docs/porting-and-validation.md
+exclude docs/test-migration.md
+exclude docs/implementation-plan.md
+exclude docs/validation-results.json

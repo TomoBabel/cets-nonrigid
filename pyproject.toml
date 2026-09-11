@@ -1,0 +1,62 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cets-nonrigid"
+version = "0.1.0.dev0"
+description = "CETS sampled non-rigid alignment exchange between AreTomo3, Warp and RELION"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MPL-2.0 AND MIT"}
+dependencies = [
+  "torch==2.8.0",
+  "torch-projectors==0.13.0",
+  "numpy",
+  "zarr>=3.0",
+  "lxml",
+  "pydantic>=2",
+  "click",
+  "cloup>=3.1",
+  "pandas",
+  "mrcfile",
+  "starfile>=0.5,<0.6",
+  "warpylib @ git+https://github.com/uermel/warpylib.git@dd35fa652e3989da8a123b2a89b010893e1af348",
+  "cryoet-alignment @ git+https://github.com/uermel/cryoet-alignment.git@2eebafb7ebb641b07befa8eba20958a0870c6768",
+  "mdocfile>=0.2",
+  "copick>=2.0.0a1",
+  "cryoet-data-portal>=4.3.1",
+  "cets_data_model @ git+https://github.com/TomoBabel/cets-data-models.git@feature/nonrigid-alignment"
+]
+
+[project.optional-dependencies]
+test = ["pytest>=7", "pytest-cov", "jsonschema"]
+dev = ["ruff==0.11.12", "mypy==1.18.2", "pre-commit", "build"]
+viz = ["matplotlib"]
+
+[project.scripts]
+cets-nonrigid = "cets_nonrigid.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["cets_nonrigid*"]
+
+[tool.setuptools]
+include-package-data = false
+license-files = ["LICENSE", "LICENSE-MIT", "THIRD_PARTY_NOTICES.md"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.mypy]
+files = [
+  "src/cets_nonrigid/api.py", "src/cets_nonrigid/context.py",
+  "src/cets_nonrigid/samples.py", "src/cets_nonrigid/sampling.py",
+  "src/cets_nonrigid/bundle_io.py", "src/cets_nonrigid/runtime.py"
+]
+ignore_missing_imports = true
+follow_imports = "skip"
