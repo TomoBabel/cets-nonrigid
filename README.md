@@ -1,7 +1,7 @@
 # cets-nonrigid
 
 Sampled non-rigid alignment exchange between AreTomo3, Warp and RELION 5,
-using CETS as the authoritative model for geometry, globals and scientific metadata.
+using CETS as the authoritative model for geometry, globals and acquisition metadata.
 Tilt-series deformation and movie motion are supported in all twelve directions.
 
 This development package depends on the CETS schema's
