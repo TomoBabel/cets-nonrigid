@@ -12,16 +12,30 @@ For local schema development, use the independent `cets-data-models-dev` checkou
 ## Model
 
 ```text
-native alignment ──> CETS Alignment / MovieAlignment
-                          globals + non_rigid_alignment descriptor
-                                        |
-                                        v
-                              Zarr sampled residuals
-                                        |
-                              target fit + validation
-                                        |
-                                        v
-                              native files / project
+                      Native alignment + metadata
+                        AreTomo3 / Warp / RELION
+                                    |
+                            Import + sample
+                                    |
+                                    v
++---------------------------- CETS bundle -----------------------------+
+| CETS JSON                            Zarr payload                    |
+|                                                                      |
+| Alignment / MovieAlignment           Sample points + residuals r     |
+| Geometry + global operators G        Optional 3D / CTF depth         |
+| Acquisition / optics / CTF           Masks + held-out observations   |
+| Payload URI + group reference                                        |
++----------------------------------------------------------------------+
+                 |                                    |
+                 +------------------+-----------------+
+                                    |
+                  Reconstruct observations: q = G + r
+                                    |
+                      Fit target model + validate
+                                    |
+                                    v
+                    Native alignment files / project
+                        AreTomo3 / Warp / RELION
 ```
 
 `Alignment.non_rigid_alignment` is a first-class core property.
