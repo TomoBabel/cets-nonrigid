@@ -52,11 +52,48 @@ Step-by-step tutorials cover tilt-series and movie conversion:
 ## Zarr payload structure
 
 A bundle pairs `experiment.cets.json` with a local Zarr v3 directory,
-`experiment.nonrigid.zarr`. One store serves the document, with a separate group
-for each alignment that has sampled deformation. The alignment's
+`experiment.nonrigid.zarr`. One store accompanies the CETS dataset document,
+with a separate group for every non-rigid alignment across all regions. The alignment's
 `non_rigid_alignment.payload_uri` and `payload_group` locate its data; group IDs
 are generated identifiers, not alignment names. Relative payload paths resolve
 from the JSON's directory.
+
+### Multiple regions and alignments
+
+All regions in a dataset document share the store. Each non-rigid alignment has
+its own group, so two alignments in one region and an alignment in another region
+remain separate:
+
+```text
+experiment.cets.json
+  regions
+    region_A
+      alignments
+        alignment_A1 --> alignments/<group-A1>
+        alignment_A2 --> alignments/<group-A2>
+    region_B
+      alignments
+        alignment_B1 --> alignments/<group-B1>
+
+experiment.nonrigid.zarr/
+  alignments/
+    <group-A1>/       points, projected_residual, masks, heldout/, ...
+    <group-A2>/       points, projected_residual, masks, heldout/, ...
+    <group-B1>/       points, projected_residual, masks, heldout/, ...
+```
+
+Each alignment's `non_rigid_alignment` descriptor uses the same
+`payload_uri: experiment.nonrigid.zarr` and a distinct `payload_group`, such as
+`alignments/<group-A1>`. The group labels above are schematic; the writer derives
+actual group IDs from `(region_id, alignment_id)`.
+
+Groups can have different image counts, sample counts, reference volumes and
+optional channels. Their geometry stays in the corresponding CETS entities;
+arrays are not concatenated across regions. Movie alignments follow the same
+arrangement under `movies/`. Alignments without a non-rigid component need no
+payload group. A document with no sampled deformation needs no Zarr store.
+
+### Arrays within an alignment
 
 The logical layout for a tilt-series alignment is:
 

@@ -82,9 +82,52 @@ RELION output; grid-only bundles cannot invent trajectories at new locations.
 
 ## Payload
 
-One local Zarr v3 store serves each document, with one immutable group per alignment.
+One local Zarr v3 store accompanies each CETS dataset document. It contains a
+separate immutable payload group for every non-rigid alignment across all regions.
 URIs resolve relative to the JSON directory; absolute local paths and local file
 URIs are supported. Remote Zarr access is not implemented in this profile.
+
+### Multiple regions and alignments
+
+All regions in a dataset document share the store. Each non-rigid alignment has
+its own group, so two alignments in one region and an alignment in another region
+remain separate:
+
+```text
+experiment.cets.json
+  regions
+    region_A
+      alignments
+        alignment_A1 --> alignments/<group-A1>
+        alignment_A2 --> alignments/<group-A2>
+    region_B
+      alignments
+        alignment_B1 --> alignments/<group-B1>
+
+experiment.nonrigid.zarr/
+  alignments/
+    <group-A1>/       points, projected_residual, masks, heldout/, ...
+    <group-A2>/       points, projected_residual, masks, heldout/, ...
+    <group-B1>/       points, projected_residual, masks, heldout/, ...
+```
+
+Each alignment's `non_rigid_alignment` descriptor uses the same
+`payload_uri: experiment.nonrigid.zarr` and a distinct `payload_group`, such as
+`alignments/<group-A1>`. The group labels above are schematic; the writer derives
+actual group IDs from `(region_id, alignment_id)`.
+
+Groups can have different image counts, sample counts, reference volumes and
+optional channels. Their geometry stays in the corresponding CETS entities;
+arrays are not concatenated across regions. Movie alignments follow the same
+arrangement under `movies/`. Alignments without a non-rigid component need no
+payload group. A document with no sampled deformation needs no Zarr store.
+
+The one-store requirement is a profile 0.1 policy, not a limitation of CETS or
+Zarr. The current reader rejects a document whose alignment descriptors resolve
+to different stores; separate stores per region would require a profile and
+reader change.
+
+### Arrays within an alignment
 
 ```text
 experiment.cets.json
